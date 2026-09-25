@@ -77,6 +77,14 @@ const CANDIDATE_SETS_QUERY = `
           id
           completedAt
           fullRoundText
+          phaseGroup {
+            id
+            displayIdentifier
+            phase {
+              id
+              name
+            }
+          }
           station {
             id
             number
@@ -115,10 +123,30 @@ export async function fetchReadyToAnnounceSets(eventId) {
     page += 1;
   } while (page <= totalPages);
 
-  return allNodes.filter((set) => {
+  // Which pools (phase groups) exist per phase, so we can tell announce.js
+  // whether "Groups" needs a pool number ("Groups Wave 2") or is a single
+  // -pool phase like "Top Cut" that doesn't ("Top Cut" alone).
+  const poolIdsByPhase = new Map();
+  for (const set of allNodes) {
+    const phaseId = set.phaseGroup?.phase?.id;
+    const poolId = set.phaseGroup?.id;
+    if (!phaseId || !poolId) continue;
+    if (!poolIdsByPhase.has(phaseId)) poolIdsByPhase.set(phaseId, new Set());
+    poolIdsByPhase.get(phaseId).add(poolId);
+  }
+
+  const readySets = allNodes.filter((set) => {
     if (!set.station?.number) return false;
     if (set.completedAt) return false;
     const entrants = (set.slots || []).map((s) => s.entrant).filter(Boolean);
     return entrants.length === 2;
   });
+
+  return readySets.map((set) => ({
+    ...set,
+    phaseGroup: set.phaseGroup && {
+      ...set.phaseGroup,
+      hasMultiplePools: (poolIdsByPhase.get(set.phaseGroup.phase?.id)?.size ?? 1) > 1,
+    },
+  }));
 }

@@ -10,7 +10,12 @@ function required(name) {
 
 export const DISCORD_TOKEN = required('DISCORD_TOKEN');
 export const DISCORD_CLIENT_ID = required('DISCORD_CLIENT_ID');
-export const DISCORD_DEV_GUILD_ID = process.env.DISCORD_DEV_GUILD_ID || null;
+// Comma-separated list of guild IDs to register commands to instantly during
+// development (e.g. "123,456"). Leave blank to register globally instead.
+export const DISCORD_DEV_GUILD_IDS = (process.env.DISCORD_DEV_GUILD_ID || '')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean);
 export const STARTGG_API_TOKEN = required('STARTGG_API_TOKEN');
 export const DATABASE_PATH = process.env.DATABASE_PATH || './data/splatscope.sqlite';
 

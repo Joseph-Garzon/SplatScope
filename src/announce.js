@@ -18,14 +18,26 @@ export function buildAnnouncement(guild, set) {
     .filter((team, i) => ![roleA, roleB][i])
     .map((team) => `⚠️ No role found named exactly "${team.name}" — that team wasn't pinged.`);
 
-  const roundText = set.fullRoundText ? ` (${set.fullRoundText})` : '';
+  // The phase name ("Top Cut", "Silver Bracket") is the human-readable bracket
+  // name; the pool number only needs to show up as "Wave N" when a phase has
+  // more than one pool ("Groups" split into Wave 1/Wave 2) — a single-pool
+  // phase like "Top Cut" is unambiguous on its own.
+  const phaseName = set.phaseGroup?.phase?.name ?? null;
+  const poolNumber = set.phaseGroup?.displayIdentifier;
+  const bracketLabel = phaseName
+    ? `${phaseName}${set.phaseGroup?.hasMultiplePools && poolNumber ? ` Wave ${poolNumber}` : ''}`
+    : null;
+  const roundParts = [bracketLabel, set.fullRoundText].filter(Boolean);
+  const roundText = roundParts.length > 0 ? ` (${roundParts.join(', ')})` : '';
 
   const content = [
+    ``,
     `The matchup between:`,
     `${mentionFor(teamA, roleA)} vs ${mentionFor(teamB, roleB)}${roundText}`,
-    `📍 Station **${stationNumber == 1 ? 'Main Stage (Streamed)' : stationNumber}**`,
+    `📍 __Station **${stationNumber == 1 ? 'Main Stage (Streamed)' : stationNumber}**__`,
     `Is starting shortly, please head to ${stationNumber == 1 ? 'the stage to setup as soon as the current set is done' : 'your station'}!`,
     ...missingRoleWarnings,
+    `-------------------------------`,
   ].join('\n');
 
   return {

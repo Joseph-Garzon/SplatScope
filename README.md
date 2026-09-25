@@ -43,7 +43,10 @@ cp .env.example .env
 
 While developing, set `DISCORD_DEV_GUILD_ID` in `.env` to your test server's ID so
 slash commands register instantly instead of waiting up to an hour for the
-global rollout. Leave it blank in production.
+global rollout. Commands only register to server(s) listed here — if you invite
+the bot to a second test server, add its ID too (comma-separated) and rerun
+`npm run deploy-commands`. Leave it blank in production, which registers
+commands globally for every server the bot is in.
 
 Register the slash commands, then start the bot:
 
